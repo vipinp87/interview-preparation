@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="912" viewBox="0 0 1480 912" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#334155"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#b91c1c"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1480" height="912" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="40" y="44" font-size="29" font-weight="700" fill="#0f172a">The 10-Million Burger Giveaway — Backend Architecture</text>
+  <text x="40" y="70" font-size="15" fill="#475569">Decrement one global counter 10M times under ~670k req/s — hard cap (never oversell), exactly-once per user.</text>
+
+  <!-- ============ BAND ① CLIENT ============ -->
+  <rect x="40" y="90" width="1400" height="80" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="58" y="114" font-size="13" font-weight="700" fill="#4338ca" letter-spacing="1">① CLIENT TIER</text>
+  <g filter="url(#shadow)"><rect x="590" y="102" width="320" height="56" rx="10" fill="#ffffff" stroke="#818cf8"/></g>
+  <text x="750" y="127" font-size="15" font-weight="600" fill="#1e293b" text-anchor="middle">Mobile / Web app — "Claim my burger"</text>
+  <text x="750" y="146" font-size="12" fill="#64748b" text-anchor="middle">jittered start (random 0–5s) flattens the t=0 spike</text>
+  <text x="1120" y="124" font-size="12" font-weight="600" fill="#4338ca">~50M users</text>
+  <text x="1120" y="142" font-size="12" fill="#64748b">most in first 60s</text>
+
+  <!-- client -> gateway -->
+  <line x1="750" y1="158" x2="750" y2="182" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ============ BAND ② EDGE ============ -->
+  <rect x="40" y="182" width="1400" height="150" rx="10" fill="#ecfeff" stroke="#a5f3fc"/>
+  <text x="58" y="206" font-size="13" font-weight="700" fill="#0e7490" letter-spacing="1">② EDGE &amp; ADMISSION CONTROL — shed load before it reaches Redis</text>
+
+  <g filter="url(#shadow)"><rect x="64" y="224" width="230" height="92" rx="10" fill="#ffffff" stroke="#22d3ee"/></g>
+  <text x="179" y="252" font-size="14" font-weight="600" fill="#1e293b" text-anchor="middle">Virtual Waiting Room</text>
+  <text x="179" y="273" font-size="11.5" fill="#64748b" text-anchor="middle">token-bucket queue issues</text>
+  <text x="179" y="289" font-size="11.5" fill="#64748b" text-anchor="middle">entry tokens at a rate the</text>
+  <text x="179" y="305" font-size="11.5" fill="#64748b" text-anchor="middle">backend can actually serve</text>
+
+  <g filter="url(#shadow)"><rect x="322" y="224" width="220" height="92" rx="10" fill="#ffffff" stroke="#22d3ee"/></g>
+  <text x="432" y="256" font-size="14" font-weight="600" fill="#1e293b" text-anchor="middle">CDN / Edge</text>
+  <text x="432" y="279" font-size="11.5" fill="#64748b" text-anchor="middle">serves static claim page,</text>
+  <text x="432" y="295" font-size="11.5" fill="#64748b" text-anchor="middle">absorbs non-API traffic</text>
+
+  <g filter="url(#shadow)"><rect x="600" y="224" width="300" height="92" rx="10" fill="#ffffff" stroke="#22d3ee"/></g>
+  <text x="750" y="252" font-size="14" font-weight="600" fill="#1e293b" text-anchor="middle">API Gateway + L7 Load Balancer</text>
+  <text x="750" y="274" font-size="11.5" fill="#64748b" text-anchor="middle">rate-limit per IP / device • admission control</text>
+  <text x="750" y="290" font-size="11.5" fill="#64748b" text-anchor="middle">fast-path SOLD_OUT • optional CAPTCHA</text>
+
+  <g filter="url(#shadow)"><rect x="958" y="224" width="360" height="92" rx="10" fill="#fff7ed" stroke="#fb923c"/></g>
+  <text x="1138" y="252" font-size="14" font-weight="700" fill="#9a3412" text-anchor="middle">FAST-PATH SOLD_OUT</text>
+  <text x="1138" y="274" font-size="11.5" fill="#7c2d12" text-anchor="middle">once the global sold-out flag flips,</text>
+  <text x="1138" y="290" font-size="11.5" fill="#7c2d12" text-anchor="middle">reject at the edge — never touch Redis</text>
+
+  <!-- gateway -> claim server (elbow down-left) -->
+  <path d="M750,316 L750,344 L430,344 L430,364" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ============ ③ COMPUTE (left spine) ============ -->
+  <g filter="url(#shadow)"><rect x="250" y="364" width="360" height="58" rx="10" fill="#ffffff" stroke="#4ade80"/></g>
+  <text x="430" y="380" font-size="10.5" font-weight="700" fill="#15803d" text-anchor="middle" letter-spacing="1">③ COMPUTE — STATELESS, AUTO-SCALED</text>
+  <text x="430" y="400" font-size="15" font-weight="600" fill="#1e293b" text-anchor="middle">Stateless Claim Servers</text>
+  <text x="430" y="416" font-size="11.5" fill="#64748b" text-anchor="middle">hundreds of pods; all state in Redis / Kafka</text>
+
+  <!-- ============ ④ REDIS panel (side, synchronous dependency) ============ -->
+  <rect x="680" y="360" width="500" height="346" rx="12" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+  <text x="700" y="385" font-size="14" font-weight="700" fill="#b91c1c">④ SCARCITY ARBITER — Redis Cluster</text>
+  <text x="700" y="403" font-size="10.5" fill="#b91c1c">strong / linearizable per key • ~100k+ ops/s per shard • replicas → failover</text>
+
+  <!-- guard -->
+  <g filter="url(#shadow)"><rect x="698" y="414" width="228" height="192" rx="10" fill="#ffffff" stroke="#f87171"/></g>
+  <text x="812" y="438" font-size="13.5" font-weight="700" fill="#991b1b" text-anchor="middle">Per-user dedup guard</text>
+  <text x="812" y="459" font-size="11.5" fill="#334155" text-anchor="middle">SET claimed:{userId} 1 NX</text>
+  <text x="812" y="480" font-size="10.5" fill="#64748b" text-anchor="middle">• already set → ALREADY_CLAIMED</text>
+  <text x="812" y="496" font-size="10.5" fill="#64748b" text-anchor="middle">• newly set → grab a burger</text>
+  <text x="812" y="512" font-size="10.5" fill="#64748b" text-anchor="middle">O(1), shards by user → no hot key</text>
+  <rect x="710" y="526" width="204" height="66" rx="8" fill="#fff1f2" stroke="#fecdd3"/>
+  <text x="812" y="548" font-size="10.5" fill="#9f1239" text-anchor="middle">on SOLD_OUT: DEL claimed:{userId}</text>
+  <text x="812" y="564" font-size="10.5" fill="#9f1239" text-anchor="middle">so we don't burn their</text>
+  <text x="812" y="580" font-size="10.5" fill="#9f1239" text-anchor="middle">one chance</text>
+
+  <!-- guard -> buckets (order: dedup first, decrement second) -->
+  <line x1="926" y1="500" x2="942" y2="500" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- buckets -->
+  <g filter="url(#shadow)"><rect x="944" y="414" width="228" height="192" rx="10" fill="#ffffff" stroke="#f87171"/></g>
+  <text x="1058" y="438" font-size="13.5" font-weight="700" fill="#991b1b" text-anchor="middle">Sharded inventory</text>
+  <text x="1058" y="456" font-size="10.5" fill="#64748b" text-anchor="middle">userId % 100 → DECR bucket:{k}</text>
+  <g font-size="10.5" fill="#1e293b" text-anchor="middle">
+    <rect x="956" y="466" width="100" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5"/><text x="1006" y="485">bucket:0=100k</text>
+    <rect x="1062" y="466" width="100" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5"/><text x="1112" y="485">bucket:1=100k</text>
+    <rect x="956" y="502" width="100" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5"/><text x="1006" y="521">bucket:2=100k</text>
+    <rect x="1062" y="502" width="100" height="30" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/><text x="1112" y="521">…:99=100k</text>
+  </g>
+  <text x="1058" y="552" font-size="10.5" font-weight="600" fill="#334155" text-anchor="middle">Σ buckets = 10,000,000 exactly</text>
+  <text x="1058" y="570" font-size="10.5" fill="#334155" text-anchor="middle">DECR ≥ 0 → GRANTED</text>
+  <text x="1058" y="586" font-size="10.5" fill="#334155" text-anchor="middle">DECR &lt; 0 → probe siblings (Lua), else SOLD_OUT</text>
+
+  <!-- bottom strip: control keys | tail phase -->
+  <rect x="698" y="618" width="228" height="76" rx="8" fill="#ffffff" stroke="#f3b4b4"/>
+  <text x="812" y="638" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">Control keys</text>
+  <text x="812" y="656" font-size="10" fill="#64748b" text-anchor="middle">active_buckets (SREM @ 0)</text>
+  <text x="812" y="671" font-size="10" fill="#64748b" text-anchor="middle">global:sold_out (edge fast-path)</text>
+  <text x="812" y="686" font-size="10" fill="#64748b" text-anchor="middle">phase = bulk | tail</text>
+
+  <rect x="944" y="618" width="228" height="76" rx="8" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="1058" y="638" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">Tail phase (exhaust all 10M)</text>
+  <text x="1058" y="656" font-size="10" fill="#166534" text-anchor="middle">aggregator flips flag → route the</text>
+  <text x="1058" y="671" font-size="10" fill="#166534" text-anchor="middle">remainder to ONE global counter</text>
+  <text x="1058" y="686" font-size="10" fill="#166534" text-anchor="middle">so the last stock drains exactly</text>
+
+  <!-- claim server <-> Redis : synchronous hot path (red, double-headed) -->
+  <text x="645" y="378" font-size="10.5" font-weight="700" fill="#b91c1c" text-anchor="middle">SET NX +</text>
+  <text x="645" y="392" font-size="10.5" font-weight="700" fill="#b91c1c" text-anchor="middle">DECR ⇄ result</text>
+  <line x1="610" y1="406" x2="680" y2="406" stroke="#b91c1c" stroke-width="2.5" marker-start="url(#arrowRed)" marker-end="url(#arrowRed)"/>
+  <text x="645" y="422" font-size="9.5" fill="#b91c1c" text-anchor="middle">hot path (sync)</text>
+
+  <!-- ============ ⑤ ASYNC spine (straight down from claim server) ============ -->
+  <!-- claim server -> Kafka : the CLAIM SERVER is the producer (not Redis) -->
+  <line x1="430" y1="422" x2="430" y2="470" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="446" y="452" font-size="11" font-weight="600" fill="#334155">produces grant event (async)</text>
+
+  <g filter="url(#shadow)"><rect x="250" y="472" width="360" height="62" rx="10" fill="#ffffff" stroke="#c084fc"/></g>
+  <text x="430" y="490" font-size="10.5" font-weight="700" fill="#7e22ce" text-anchor="middle" letter-spacing="1">⑤ ASYNC DURABILITY &amp; NOTIFICATIONS — EVENTUAL</text>
+  <text x="430" y="509" font-size="14.5" font-weight="700" fill="#6b21a8" text-anchor="middle">Kafka topic: burger-grants</text>
+  <text x="430" y="525" font-size="11" fill="#64748b" text-anchor="middle">partitioned by userId • durable • replayable audit stream</text>
+
+  <!-- Kafka -> workers -->
+  <line x1="430" y1="534" x2="430" y2="580" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)"><rect x="270" y="580" width="320" height="58" rx="10" fill="#ffffff" stroke="#c084fc"/></g>
+  <text x="430" y="605" font-size="14" font-weight="600" fill="#1e293b" text-anchor="middle">Consumer workers (at-least-once)</text>
+  <text x="430" y="623" font-size="11" fill="#64748b" text-anchor="middle">idempotent upsert keyed by event_id / user_id</text>
+
+  <!-- workers -> postgres / notifications -->
+  <path d="M360,638 L360,672 L230,672 L230,700" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M500,638 L500,672 L628,672 L628,700" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)"><rect x="90" y="700" width="280" height="64" rx="10" fill="#ffffff" stroke="#a78bfa"/></g>
+  <text x="230" y="726" font-size="14" font-weight="700" fill="#5b21b6" text-anchor="middle">PostgreSQL — grants</text>
+  <text x="230" y="745" font-size="11" fill="#64748b" text-anchor="middle">durable source of truth / audit (ACID)</text>
+  <text x="230" y="759" font-size="10" fill="#94a3b8" text-anchor="middle">10M rows is trivial; written async</text>
+
+  <g filter="url(#shadow)"><rect x="488" y="700" width="280" height="64" rx="10" fill="#ffffff" stroke="#a78bfa"/></g>
+  <text x="628" y="726" font-size="14" font-weight="700" fill="#5b21b6" text-anchor="middle">Notifications (Email / SMS)</text>
+  <text x="628" y="745" font-size="11" fill="#64748b" text-anchor="middle">"your burger is on the way"</text>
+  <text x="628" y="759" font-size="10" fill="#94a3b8" text-anchor="middle">slow provider never gates claims</text>
+
+  <!-- ============ AUX / BATCH column (interacts with Redis) ============ -->
+  <rect x="1200" y="360" width="240" height="346" rx="12" fill="#f1f5f9" stroke="#e2e8f0"/>
+  <text x="1320" y="384" font-size="12.5" font-weight="700" fill="#334155" letter-spacing="1" text-anchor="middle">AUX / BATCH JOBS</text>
+
+  <g filter="url(#shadow)"><rect x="1214" y="396" width="212" height="68" rx="9" fill="#ffffff" stroke="#94a3b8"/></g>
+  <text x="1320" y="418" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">Display counter</text>
+  <text x="1320" y="436" font-size="10" fill="#64748b" text-anchor="middle">sums buckets every 1–2s →</text>
+  <text x="1320" y="450" font-size="10" fill="#64748b" text-anchor="middle">cached key, served via CDN (approx.)</text>
+
+  <g filter="url(#shadow)"><rect x="1214" y="474" width="212" height="68" rx="9" fill="#ffffff" stroke="#94a3b8"/></g>
+  <text x="1320" y="496" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">Tail aggregator</text>
+  <text x="1320" y="514" font-size="10" fill="#64748b" text-anchor="middle">watches total; when low, flips</text>
+  <text x="1320" y="528" font-size="10" fill="#64748b" text-anchor="middle">phase → tail (drain exactly)</text>
+
+  <g filter="url(#shadow)"><rect x="1214" y="552" width="212" height="68" rx="9" fill="#ffffff" stroke="#94a3b8"/></g>
+  <text x="1320" y="574" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">Reconciliation</text>
+  <text x="1320" y="592" font-size="10" fill="#64748b" text-anchor="middle">Σ Redis grants vs Postgres rows;</text>
+  <text x="1320" y="606" font-size="10" fill="#64748b" text-anchor="middle">prove grants ≤ 10M</text>
+
+  <g filter="url(#shadow)"><rect x="1214" y="630" width="212" height="64" rx="9" fill="#ffffff" stroke="#94a3b8"/></g>
+  <text x="1320" y="652" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">Expiry sweeper</text>
+  <text x="1320" y="670" font-size="10" fill="#64748b" text-anchor="middle">unredeemed 24h → INCR bucket</text>
+  <text x="1320" y="684" font-size="10" fill="#64748b" text-anchor="middle">+ clear guard (recycle stock)</text>
+
+  <!-- dashed links: aux <-> Redis panel -->
+  <line x1="1214" y1="430" x2="1180" y2="470" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowGray)"/>
+  <line x1="1214" y1="586" x2="1180" y2="560" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowGray)"/>
+
+  <!-- ============ LEGEND (horizontal, bottom) ============ -->
+  <g transform="translate(40,806)">
+    <rect x="0" y="0" width="1400" height="64" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="20" y="26" font-size="13.5" font-weight="700" fill="#0f172a">Legend</text>
+    <line x1="20" y1="46" x2="54" y2="46" stroke="#b91c1c" stroke-width="2.5" marker-start="url(#arrowRed)" marker-end="url(#arrowRed)"/>
+    <text x="62" y="50" font-size="12" fill="#334155">Hot path — sync req/resp, user waits</text>
+    <line x1="330" y1="46" x2="364" y2="46" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="372" y="50" font-size="12" fill="#334155">Async — off the critical path</text>
+    <line x1="610" y1="46" x2="644" y2="46" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowGray)"/>
+    <text x="652" y="50" font-size="12" fill="#334155">Batch / background job</text>
+    <text x="880" y="28" font-size="12" font-weight="700" fill="#991b1b">Strong / linearizable:</text>
+    <text x="880" y="50" font-size="11" fill="#475569">burger count + per-user guard (Redis atomic)</text>
+    <text x="1170" y="28" font-size="12" font-weight="700" fill="#6b21a8">Eventual:</text>
+    <text x="1170" y="50" font-size="11" fill="#475569">Postgres row + notification</text>
+  </g>
+</svg>

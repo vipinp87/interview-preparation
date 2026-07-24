@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1012" viewBox="0 0 1560 1012" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#334155"/></marker>
+    <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#0e7490"/></marker>
+    <marker id="arrowAmber" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#c2410c"/></marker>
+    <marker id="arrowRed" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#b91c1c"/></marker>
+    <marker id="arrowViolet" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#6d28d9"/></marker>
+    <marker id="arrowGray" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.16"/></filter>
+  </defs>
+
+  <rect x="0" y="0" width="1560" height="1012" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="40" y="44" font-size="26" font-weight="700" fill="#0f172a">Google Docs — How One Keystroke Flows: WebSocket, Sequencer &amp; Redis Pub/Sub</text>
+  <text x="40" y="69" font-size="14" fill="#475569">Follow a single edit end-to-end. Your own keystroke echoes instantly (no network wait); the network path is best-effort fan-out made correct by per-doc sequence numbers + a durable op log.</text>
+
+  <!-- ============ CLIENTS ============ -->
+  <rect x="40" y="86" width="1480" height="182" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="58" y="110" font-size="13" font-weight="700" fill="#4338ca" letter-spacing="0.5">① CLIENTS — optimistic local echo: your own keystroke applies to your buffer instantly, before the server ever sees it</text>
+
+  <!-- Alice (the typer) -->
+  <g filter="url(#shadow)"><rect x="250" y="122" width="300" height="132" rx="10" fill="#ffffff" stroke="#6366f1" stroke-width="1.6"/></g>
+  <rect x="250" y="122" width="300" height="24" rx="10" fill="#e0e7ff"/><rect x="250" y="138" width="300" height="8" fill="#e0e7ff"/>
+  <circle cx="266" cy="134" r="4" fill="#f87171"/><circle cx="280" cy="134" r="4" fill="#fbbf24"/><circle cx="294" cy="134" r="4" fill="#34d399"/>
+  <text x="400" y="138" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Alice — editing</text>
+  <text x="400" y="170" font-size="15" fill="#0f172a" text-anchor="middle" font-family="monospace">Hello!▍</text>
+  <text x="400" y="196" font-size="10.5" fill="#15803d" text-anchor="middle" font-weight="600">① types "!" → own buffer shows it at 0 ms</text>
+  <text x="400" y="212" font-size="10" fill="#64748b" text-anchor="middle">op = insert(pos 5, "!")</text>
+  <text x="400" y="228" font-size="10" fill="#64748b" text-anchor="middle">tag {baseVersion 12, clientOpId alice-7}</text>
+  <text x="400" y="244" font-size="10" fill="#94a3b8" text-anchor="middle">last applied seq: 12</text>
+
+  <!-- Bob -->
+  <g filter="url(#shadow)"><rect x="630" y="122" width="300" height="132" rx="10" fill="#ffffff" stroke="#a5b4fc"/></g>
+  <rect x="630" y="122" width="300" height="24" rx="10" fill="#eef2ff"/><rect x="630" y="138" width="300" height="8" fill="#eef2ff"/>
+  <circle cx="646" cy="134" r="4" fill="#f87171"/><circle cx="660" cy="134" r="4" fill="#fbbf24"/><circle cx="674" cy="134" r="4" fill="#34d399"/>
+  <text x="780" y="138" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Bob — viewing</text>
+  <text x="780" y="172" font-size="15" fill="#0f172a" text-anchor="middle" font-family="monospace">Hello!</text>
+  <text x="780" y="200" font-size="10.5" fill="#c2410c" text-anchor="middle" font-weight="600">⑦ receives seq 13, applies "!"</text>
+  <text x="780" y="220" font-size="10" fill="#64748b" text-anchor="middle">on WS-1 (same server as Alice)</text>
+  <text x="780" y="240" font-size="10" fill="#94a3b8" text-anchor="middle">last applied seq: 12 → 13</text>
+
+  <!-- Carol -->
+  <g filter="url(#shadow)"><rect x="1010" y="122" width="300" height="132" rx="10" fill="#ffffff" stroke="#a5b4fc"/></g>
+  <rect x="1010" y="122" width="300" height="24" rx="10" fill="#eef2ff"/><rect x="1010" y="138" width="300" height="8" fill="#eef2ff"/>
+  <circle cx="1026" cy="134" r="4" fill="#f87171"/><circle cx="1040" cy="134" r="4" fill="#fbbf24"/><circle cx="1054" cy="134" r="4" fill="#34d399"/>
+  <text x="1160" y="138" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">Carol — viewing</text>
+  <text x="1160" y="172" font-size="15" fill="#0f172a" text-anchor="middle" font-family="monospace">Hello!</text>
+  <text x="1160" y="200" font-size="10.5" fill="#c2410c" text-anchor="middle" font-weight="600">⑦ receives seq 13 via fan-out</text>
+  <text x="1160" y="220" font-size="10" fill="#64748b" text-anchor="middle">on WS-2 (a different server)</text>
+  <text x="1160" y="240" font-size="10" fill="#94a3b8" text-anchor="middle">last applied seq: 12 → 13</text>
+
+  <!-- WebSocket persistent connections (clients <-> WS servers) -->
+  <text x="400" y="292" font-size="10.5" font-weight="700" fill="#0e7490" text-anchor="middle">persistent WebSocket — one per client, bidirectional, held open all session</text>
+  <line x1="360" y1="254" x2="470" y2="304" stroke="#0e7490" stroke-width="2.2" marker-end="url(#arrowTeal)"/>
+  <text x="330" y="284" font-size="10.5" font-weight="700" fill="#0e7490">② send op</text>
+  <line x1="700" y1="254" x2="600" y2="304" stroke="#0e7490" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <line x1="1160" y1="254" x2="1140" y2="304" stroke="#0e7490" stroke-width="1.6" stroke-dasharray="2 2"/>
+
+  <!-- ============ WS / FAN-OUT SERVERS ============ -->
+  <g filter="url(#shadow)"><rect x="360" y="304" width="340" height="86" rx="10" fill="#ffffff" stroke="#22d3ee" stroke-width="1.5"/></g>
+  <text x="530" y="330" font-size="14" font-weight="700" fill="#0e7490" text-anchor="middle">WS / Fan-out server #1</text>
+  <text x="530" y="351" font-size="10.5" fill="#64748b" text-anchor="middle">holds sockets: Alice, Bob</text>
+  <text x="530" y="368" font-size="10.5" fill="#64748b" text-anchor="middle">sticky-routed by docId; stateless re: order</text>
+  <text x="530" y="384" font-size="10" fill="#94a3b8" text-anchor="middle">subscribes to Redis channel doc:{id}</text>
+
+  <g filter="url(#shadow)"><rect x="900" y="304" width="340" height="86" rx="10" fill="#ffffff" stroke="#22d3ee" stroke-width="1.5"/></g>
+  <text x="1070" y="330" font-size="14" font-weight="700" fill="#0e7490" text-anchor="middle">WS / Fan-out server #2</text>
+  <text x="1070" y="351" font-size="10.5" fill="#64748b" text-anchor="middle">holds socket: Carol</text>
+  <text x="1070" y="368" font-size="10.5" fill="#64748b" text-anchor="middle">a different instance — needs a bus to hear Alice's op</text>
+  <text x="1070" y="384" font-size="10" fill="#94a3b8" text-anchor="middle">subscribes to Redis channel doc:{id}</text>
+
+  <!-- WS-1 -> Sequencer (step 3) -->
+  <line x1="560" y1="390" x2="660" y2="422" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <text x="558" y="412" font-size="10.5" font-weight="700" fill="#334155">③ forward to sequencer</text>
+  <!-- WS-2 -> Sequencer (any client may send) -->
+  <line x1="1040" y1="390" x2="1010" y2="470" stroke="#334155" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="800" y="414" font-size="9.5" fill="#94a3b8">(any client's ops travel the same way)</text>
+
+  <!-- ============ ④ SEQUENCER ============ -->
+  <g filter="url(#shadow)"><rect x="540" y="422" width="486" height="200" rx="12" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8"/></g>
+  <text x="560" y="448" font-size="14.5" font-weight="700" fill="#15803d">④ PER-DOC SEQUENCER — the single arbiter of order (OT)</text>
+  <text x="560" y="470" font-size="10.5" fill="#166534">the one server that owns this doc; everything below is what it does per op</text>
+  <text x="562" y="494" font-size="11" fill="#0f172a">•  receive  insert(5,"!")  {baseVersion 12, clientOpId alice-7}</text>
+  <text x="562" y="514" font-size="11" fill="#0f172a">•  OT-transform against any ops sequenced since v12</text>
+  <text x="562" y="534" font-size="11" fill="#0f172a">•  assign canonical <tspan font-weight="700" fill="#15803d">seq = 13</tspan> (monotonic, per doc) — the commit point</text>
+  <text x="562" y="554" font-size="11" fill="#0f172a">•  append to durable op log  ⑤  →</text>
+  <text x="562" y="574" font-size="11" fill="#0f172a">•  ack Alice: echo {seq 13, clientOpId alice-7} so she won't re-apply</text>
+  <text x="562" y="594" font-size="11" fill="#0f172a">•  <tspan font-weight="700" fill="#c2410c">PUBLISH</tspan> transformed op to Redis Pub/Sub  ⑥  ↓</text>
+  <text x="562" y="613" font-size="9.5" fill="#94a3b8">every broadcast op carries seq 13 — that number is what makes lossy fan-out recoverable</text>
+
+  <!-- Sequencer -> ack Alice (dashed up) -->
+  <path d="M560,422 L520,405 L470,405" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowTeal)"/>
+  <text x="470" y="398" font-size="9.5" font-weight="600" fill="#16a34a">ack seq 13 → Alice</text>
+
+  <!-- ============ ⑤ DURABLE OP LOG + SNAPSHOT (right) ============ -->
+  <rect x="1092" y="410" width="428" height="256" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.6"/>
+  <text x="1112" y="435" font-size="14" font-weight="700" fill="#6d28d9">⑤ DURABLE OP LOG — the source of truth</text>
+  <text x="1112" y="455" font-size="10.5" fill="#5b21b6">Kafka / Cassandra · ordered &amp; append-only · partitioned by docId</text>
+  <g font-size="10" fill="#1e293b" text-anchor="middle" font-family="monospace">
+    <rect x="1112" y="466" width="66" height="26" rx="5" fill="#ede9fe" stroke="#c4b5fd"/><text x="1145" y="483">op#11</text>
+    <rect x="1184" y="466" width="66" height="26" rx="5" fill="#ede9fe" stroke="#c4b5fd"/><text x="1217" y="483">op#12</text>
+    <rect x="1256" y="466" width="80" height="26" rx="5" fill="#ddd6fe" stroke="#8b5cf6"/><text x="1296" y="483">op#13 ⟵</text>
+    <rect x="1342" y="466" width="60" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/><text x="1372" y="483">…</text>
+  </g>
+  <text x="1112" y="512" font-size="10" fill="#64748b">replayable, ordered — the authority for "what happened, in what order"</text>
+
+  <rect x="1112" y="524" width="388" height="52" rx="8" fill="#ffffff" stroke="#c4b5fd"/>
+  <text x="1120" y="544" font-size="11.5" font-weight="700" fill="#6d28d9">Snapshot store (S3 / DynamoDB)</text>
+  <text x="1120" y="562" font-size="9.8" fill="#64748b">snapshot@op#12000 + replay small tail → fast open at any doc age</text>
+
+  <rect x="1112" y="586" width="388" height="66" rx="8" fill="#fef2f2" stroke="#fca5a5"/>
+  <text x="1120" y="606" font-size="11.5" font-weight="700" fill="#b91c1c">⑧ CATCH-UP READ (the safety net)</text>
+  <text x="1120" y="624" font-size="9.8" fill="#7f1d1d">client saw a seq GAP → fetch ops (last_seen+1 .. now) from the log</text>
+  <text x="1120" y="640" font-size="9.8" fill="#7f1d1d">this is what makes a DROPPED pub/sub message safe — it is re-read, not lost</text>
+
+  <!-- sequencer -> op log (5) -->
+  <line x1="1026" y1="500" x2="1092" y2="500" stroke="#6d28d9" stroke-width="2.2" marker-end="url(#arrowViolet)"/>
+  <text x="1030" y="492" font-size="10" font-weight="700" fill="#6d28d9">⑤ append</text>
+
+  <!-- catch-up (8): WS-2 -> op log -->
+  <path d="M1240,347 L1400,347 L1400,404" fill="none" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrowRed)"/>
+  <text x="1250" y="340" font-size="9.8" font-weight="700" fill="#b91c1c">⑧ seq gap → catch-up read</text>
+
+  <!-- ============ ⑥ REDIS PUB/SUB fan-out bus ============ -->
+  <rect x="360" y="690" width="880" height="140" rx="12" fill="#fff7ed" stroke="#fb923c" stroke-width="1.8"/>
+  <text x="380" y="715" font-size="14.5" font-weight="700" fill="#c2410c">⑥ REDIS PUB/SUB — channel doc:{docId}  ·  fast in-memory fan-out across WS servers</text>
+  <text x="380" y="735" font-size="10.5" fill="#9a3412">PUBLISH once → every subscribed WS server receives it → each pushes down its own sockets ⑦. This is the ONLY way WS-2 (Carol) hears Alice's op.</text>
+  <rect x="378" y="746" width="844" height="70" rx="8" fill="#fef2f2" stroke="#f87171"/>
+  <text x="392" y="766" font-size="12" font-weight="700" fill="#b91c1c">⚠ AT-MOST-ONCE — Redis Pub/Sub CAN DROP the message. No persistence, no replay, no ack.</text>
+  <text x="392" y="784" font-size="10" fill="#7f1d1d">Dropped when: (a) a subscriber isn't connected at publish time · (b) a slow consumer exceeds client-output-buffer-limit → Redis disconnects it</text>
+  <text x="392" y="800" font-size="10" fill="#7f1d1d">(c) Redis failover / restart loses in-flight messages · (d) a network blip. → Safe for presence; UNSAFE alone for edits. Reliability comes from seq# + the op log ⑧.</text>
+
+  <!-- sequencer -> bus (6) -->
+  <line x1="780" y1="622" x2="780" y2="688" stroke="#c2410c" stroke-width="2.4" marker-end="url(#arrowAmber)"/>
+  <text x="792" y="662" font-size="10.5" font-weight="700" fill="#c2410c">⑥ PUBLISH doc:{id}</text>
+
+  <!-- bus -> WS-1 (7, up) -->
+  <path d="M470,690 L470,650 L500,650 L500,392" fill="none" stroke="#c2410c" stroke-width="2.2" marker-end="url(#arrowAmber)"/>
+  <text x="380" y="640" font-size="10.5" font-weight="700" fill="#c2410c">⑦ deliver → Bob</text>
+  <!-- bus -> WS-2 (7, up) -->
+  <path d="M1120,690 L1120,650 L1090,650 L1090,392" fill="none" stroke="#c2410c" stroke-width="2.2" marker-end="url(#arrowAmber)"/>
+  <text x="978" y="681" font-size="10.5" font-weight="700" fill="#c2410c">⑦ deliver → Carol</text>
+
+  <!-- ============ PRESENCE (left, ephemeral) ============ -->
+  <rect x="56" y="422" width="266" height="252" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="72" y="446" font-size="13" font-weight="700" fill="#475569">PRESENCE — separate</text>
+  <text x="72" y="464" font-size="13" font-weight="700" fill="#475569">ephemeral channel</text>
+  <text x="72" y="488" font-size="10.5" fill="#64748b">channel presence:{docId}</text>
+  <text x="72" y="505" font-size="10.5" fill="#64748b">cursor · selection · "is typing"</text>
+  <rect x="72" y="516" width="234" height="60" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="84" y="536" font-size="10.5" font-weight="700" fill="#0f766e">Redis Pub/Sub too —</text>
+  <text x="84" y="552" font-size="10" fill="#475569">but LOSSY BY DESIGN, and that's</text>
+  <text x="84" y="567" font-size="10" fill="#475569">exactly right: latest-value-wins.</text>
+  <text x="72" y="596" font-size="10" fill="#64748b">A dropped cursor tick is invisible</text>
+  <text x="72" y="611" font-size="10" fill="#64748b">— the next tick repaints it.</text>
+  <text x="72" y="632" font-size="10" fill="#94a3b8">Never persisted, never ordered</text>
+  <text x="72" y="647" font-size="10" fill="#94a3b8">against edits, no catch-up.</text>
+  <text x="72" y="668" font-size="9.8" font-weight="700" fill="#b91c1c">Same drop property = feature here, bug for ops.</text>
+
+  <!-- presence dashed link to Alice -->
+  <path d="M250,200 L200,200 L200,422" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowGray)"/>
+  <text x="120" y="240" font-size="9.5" fill="#94a3b8">cursor ticks</text>
+
+  <!-- ============ LEGEND ============ -->
+  <g transform="translate(40,860)">
+    <rect x="0" y="0" width="1480" height="120" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="20" y="26" font-size="13.5" font-weight="700" fill="#0f172a">Legend — read the circled numbers ①→⑧ to trace one keystroke</text>
+
+    <line x1="20" y1="48" x2="54" y2="48" stroke="#0e7490" stroke-width="2.2" marker-end="url(#arrowTeal)"/>
+    <text x="62" y="52" font-size="11" fill="#334155">Persistent WebSocket (client ⇄ WS server)</text>
+    <line x1="320" y1="48" x2="354" y2="48" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+    <text x="362" y="52" font-size="11" fill="#334155">WS server ⇄ sequencer (sync)</text>
+    <line x1="600" y1="48" x2="634" y2="48" stroke="#c2410c" stroke-width="2.2" marker-end="url(#arrowAmber)"/>
+    <text x="642" y="52" font-size="11" fill="#334155">Redis Pub/Sub fan-out (best-effort, lossy)</text>
+    <line x1="920" y1="48" x2="954" y2="48" stroke="#6d28d9" stroke-width="2.2" marker-end="url(#arrowViolet)"/>
+    <text x="962" y="52" font-size="11" fill="#334155">Append to durable op log</text>
+    <line x1="1170" y1="48" x2="1204" y2="48" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrowRed)"/>
+    <text x="1212" y="52" font-size="11" fill="#334155">Recovery: seq-gap catch-up</text>
+
+    <text x="20" y="82" font-size="11.5" font-weight="700" fill="#15803d">Instant &amp; local:</text>
+    <text x="128" y="82" font-size="11" fill="#475569">① your own edit renders at 0 ms — never waits on the network.</text>
+    <text x="560" y="82" font-size="11.5" font-weight="700" fill="#6d28d9">Strong &amp; ordered:</text>
+    <text x="680" y="82" font-size="11" fill="#475569">the sequencer's seq# (④⑤) is the linearization point — the canonical order.</text>
+    <text x="1150" y="82" font-size="11.5" font-weight="700" fill="#c2410c">Fast but lossy:</text>
+    <text x="1250" y="82" font-size="11" fill="#475569">pub/sub ⑥⑦.</text>
+
+    <text x="20" y="104" font-size="11.5" font-weight="700" fill="#b91c1c">The key idea:</text>
+    <text x="128" y="104" font-size="11" fill="#334155">Redis Pub/Sub is fire-and-forget, so a client can miss an op. It's made safe not by trusting delivery, but by numbering every op (seq#) and re-reading gaps ⑧ from the durable log. Presence skips all that — it just tolerates the loss.</text>
+  </g>
+</svg>
